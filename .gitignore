@@ -1,0 +1,10 @@
+# Mac OS X
+.DS_Store
+.Trashes
+
+# Swift Package
+.build/
+*.o
+*.d
+
+.env

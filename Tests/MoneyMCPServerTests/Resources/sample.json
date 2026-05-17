@@ -1,0 +1,135 @@
+{
+    "accounts": [
+        {
+            "active": true,
+            "balance": "1000.00",
+            "created": "2025-01-01T10:00:00Z",
+            "currency": "GBP",
+            "group": "00000000-0000-0000-0000-000000000000",
+            "id": "acct-checking",
+            "order": 0,
+            "title": "Checking",
+            "type": 1
+        },
+        {
+            "active": true,
+            "balance": "500.00",
+            "created": "2025-01-01T10:00:00Z",
+            "currency": "GBP",
+            "group": "00000000-0000-0000-0000-000000000000",
+            "id": "acct-savings",
+            "order": 1,
+            "title": "Savings",
+            "type": 32
+        }
+    ],
+    "budget": [
+        {
+            "category": "cat-groceries",
+            "created": "2025-01-01T10:00:00Z",
+            "id": "budget-1",
+            "target": "200.00",
+            "type": 2
+        }
+    ],
+    "categories": [
+        {
+            "created": "2025-01-01T10:00:00Z",
+            "id": "cat-food",
+            "image": "cart",
+            "title": "Food"
+        },
+        {
+            "created": "2025-01-01T10:00:00Z",
+            "id": "cat-groceries",
+            "image": "cart.fill",
+            "parent": "cat-food",
+            "title": "Groceries"
+        },
+        {
+            "created": "2025-01-01T10:00:00Z",
+            "id": "cat-salary",
+            "image": "banknote",
+            "title": "Salary"
+        }
+    ],
+    "connections": [],
+    "currencies": [
+        {
+            "created": "2025-01-01T10:00:00Z",
+            "default": true,
+            "id": "GBP",
+            "rate": "1.00"
+        },
+        {
+            "created": "2025-01-01T10:00:00Z",
+            "default": false,
+            "id": "USD",
+            "rate": "1.25"
+        }
+    ],
+    "groups": [
+        {
+            "created": "2000-01-01T01:00:00Z",
+            "id": "00000000-0000-0000-0000-000000000000",
+            "order": -9223372036854775808,
+            "title": "Accounts"
+        }
+    ],
+    "open": [],
+    "payees": [
+        {
+            "created": "2025-01-01T10:00:00Z",
+            "id": "payee-tesco",
+            "title": "Tesco"
+        }
+    ],
+    "scheduled": [
+        {
+            "automatic": true,
+            "category": "cat-salary",
+            "created": "2025-01-01T10:00:00Z",
+            "currency": "GBP",
+            "id": "sched-1",
+            "interval": 8,
+            "scheduled": "2025-02-01T10:00:00Z",
+            "source": "acct-checking",
+            "type": 1,
+            "value": "3000.00"
+        }
+    ],
+    "transactions": [
+        {
+            "category": "cat-salary",
+            "created": "2025-01-15T09:00:00Z",
+            "currency": "GBP",
+            "id": "tx-income",
+            "notes": "January salary",
+            "source": "acct-checking",
+            "type": 1,
+            "value": "3000.00"
+        },
+        {
+            "category": "cat-groceries",
+            "created": "2025-01-16T14:30:00Z",
+            "currency": "GBP",
+            "id": "tx-expense",
+            "notes": "",
+            "payee": "payee-tesco",
+            "source": "acct-checking",
+            "type": 2,
+            "value": "45.50"
+        },
+        {
+            "created": "2025-01-17T12:00:00Z",
+            "currency": "GBP",
+            "destination": "acct-savings",
+            "id": "tx-transfer",
+            "notes": "Monthly savings",
+            "source": "acct-checking",
+            "type": 4,
+            "value": "200.00"
+        }
+    ],
+    "version": 2
+}
