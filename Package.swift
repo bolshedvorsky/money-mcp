@@ -3,7 +3,7 @@ import PackageDescription
 
 let package = Package(
     name: "MoneyMCPServer",
-    platforms: [.macOS(.v26)],
+    platforms: [.macOS("26.0")],
     dependencies: [
         .package(url: "https://github.com/modelcontextprotocol/swift-sdk", from: "0.9.0"),
     ],
