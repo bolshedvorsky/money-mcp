@@ -1,8 +1,10 @@
 # MoneyMCPServer
 
-An [MCP (Model Context Protocol)](https://modelcontextprotocol.io) server that gives Claude access to your personal finance data from the [Money – Budget & Finance Tracker](https://indigosoft.co.uk) app.
+A companion tool for [Indigo Money](https://indigosoft.co.uk) by Indigosoft — available for iPhone, iPad, Mac, Apple Watch and Apple Vision Pro.
 
-Ask Claude to analyse your spending, create transactions, track budgets, and more — all using the data you already have in Money.
+An [MCP (Model Context Protocol)](https://modelcontextprotocol.io) server that gives Claude access to your personal finance data from the app.
+
+Ask Claude to analyse your spending, create transactions, track budgets, and more — all using the data you already have in Indigo Money.
 
 [![Tests](https://github.com/bolshedvorsky/money-mcp-server/actions/workflows/tests.yml/badge.svg)](https://github.com/bolshedvorsky/money-mcp-server/actions/workflows/tests.yml)
 
@@ -11,7 +13,7 @@ Ask Claude to analyse your spending, create transactions, track budgets, and mor
 ## Requirements
 
 - macOS 26 or later
-- [Money – Budget & Finance Tracker](https://indigosoft.co.uk) (iOS / macOS)
+- [Indigo Money](https://indigosoft.co.uk) (iOS / macOS)
 - [Claude Desktop](https://claude.ai/download) (or any MCP-compatible client)
 - Swift 5.9+ (for building from source)
 
@@ -39,7 +41,7 @@ cp .build/release/MoneyMCPServer /usr/local/bin/MoneyMCPServer
 
 ### 1. Export your data from Money
 
-Open the **Money** app on your iPhone or iPad, go to **Settings → Export for Claude**. This writes a snapshot of your data to:
+Open the **Indigo Money** app on your iPhone or iPad, go to **Settings → Export for Claude**. This writes a snapshot of your data to:
 
 ```
 ~/Library/Application Support/MoneyMCPServer/data.json
@@ -181,31 +183,3 @@ swift test
 ```
 
 Tests cover JSON parsing, balance computation, title denormalization, CRUD operations, and round-trip fidelity for all entity types.
-
-### Project structure
-
-```
-Sources/MoneyMCPServer/
-├── main.swift                      # Entry point, server setup
-├── DataProvider.swift              # JSON parsing, in-memory model, persistence
-├── Models.swift                    # MCPAccount, MCPTransaction, etc.
-├── ToolHandler.swift               # Routes MCP tool calls
-└── Tools/
-    ├── AccountTools.swift
-    ├── TransactionTools.swift
-    ├── BudgetTools.swift
-    ├── CategoryTools.swift
-    ├── CurrencyTools.swift
-    ├── PayeeTools.swift
-    └── ScheduledTransactionTools.swift
-Tests/MoneyMCPServerTests/
-├── DataProviderTests.swift         # 51 unit tests
-└── Resources/
-    └── sample.json                 # Test fixture
-```
-
----
-
-## Money app
-
-MoneyMCPServer is a companion tool for [Money – Budget & Finance Tracker](https://indigosoft.co.uk) by Indigosoft. The Money app is available for iPhone, iPad, Mac, Apple Watch and Apple Vision Pro.
