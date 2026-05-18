@@ -6,7 +6,9 @@ An [MCP (Model Context Protocol)](https://modelcontextprotocol.io) server that g
 
 Ask Claude to analyse your spending, create transactions, track budgets, and more — all using the data you already have in Indigo Money.
 
-[![Tests](https://github.com/bolshedvorsky/money-mcp-server/actions/workflows/tests.yml/badge.svg)](https://github.com/bolshedvorsky/money-mcp-server/actions/workflows/tests.yml)
+[![Swift](https://img.shields.io/badge/Swift-6.0-orange?logo=swift&logoColor=white)](https://swift.org)
+[![macOS](https://img.shields.io/badge/macOS-26.0+-black?logo=apple&logoColor=white)](https://developer.apple.com/macos/)
+[![Tests](https://github.com/bolshedvorsky/money-mcp/actions/workflows/tests.yml/badge.svg)](https://github.com/bolshedvorsky/money-mcp/actions/workflows/tests.yml)
 
 ---
 
@@ -15,7 +17,7 @@ Ask Claude to analyse your spending, create transactions, track budgets, and mor
 - macOS 26 or later
 - [Indigo Money](https://indigosoft.co.uk) (iOS / macOS)
 - [Claude Desktop](https://claude.ai/download) (or any MCP-compatible client)
-- Swift 5.9+ (for building from source)
+- Swift 6.0+ (for building from source)
 
 ---
 
