@@ -1,8 +1,7 @@
-@testable import MoneyMCPServer
 import XCTest
+@testable import MoneyMCPServer
 
 final class DataProviderTests: XCTestCase {
-
     // MARK: - Helpers
 
     private func makeProvider() throws -> (JSONDataProvider, URL) {
@@ -11,7 +10,7 @@ final class DataProviderTests: XCTestCase {
             .appendingPathComponent(UUID().uuidString + ".json")
         try FileManager.default.copyItem(at: src, to: dst)
         addTeardownBlock { try? FileManager.default.removeItem(at: dst) }
-        return (try JSONDataProvider(url: dst), dst)
+        return try (JSONDataProvider(url: dst), dst)
     }
 
     // MARK: - Currencies
@@ -58,7 +57,7 @@ final class DataProviderTests: XCTestCase {
         XCTAssertEqual(checking.currencyId, "GBP")
         XCTAssertTrue(checking.isActive)
         XCTAssertEqual(checking.sortOrder, 0)
-        XCTAssertEqual(checking.groupId, "")  // noneUUID mapped to ""
+        XCTAssertEqual(checking.groupId, "") // noneUUID mapped to ""
     }
 
     func testAccountTypeStrings() throws {
@@ -112,15 +111,29 @@ final class DataProviderTests: XCTestCase {
 
     func testParseTransactionCount() throws {
         let (provider, _) = try makeProvider()
-        let txns = provider.transactions(accountId: nil, categoryId: nil, payeeId: nil,
-                                         type: nil, from: nil, to: nil, limit: nil)
+        let txns = provider.transactions(
+            accountId: nil,
+            categoryId: nil,
+            payeeId: nil,
+            type: nil,
+            from: nil,
+            to: nil,
+            limit: nil
+        )
         XCTAssertEqual(txns.count, 3)
     }
 
     func testTransactionTypeStrings() throws {
         let (provider, _) = try makeProvider()
-        let all = provider.transactions(accountId: nil, categoryId: nil, payeeId: nil,
-                                        type: nil, from: nil, to: nil, limit: nil)
+        let all = provider.transactions(
+            accountId: nil,
+            categoryId: nil,
+            payeeId: nil,
+            type: nil,
+            from: nil,
+            to: nil,
+            limit: nil
+        )
         XCTAssertTrue(all.contains { $0.type == "income" })
         XCTAssertTrue(all.contains { $0.type == "expense" })
         XCTAssertTrue(all.contains { $0.type == "transfer" })
@@ -128,9 +141,15 @@ final class DataProviderTests: XCTestCase {
 
     func testIncomeTitleDenormalization() throws {
         let (provider, _) = try makeProvider()
-        let income = try XCTUnwrap(provider.transactions(accountId: nil, categoryId: nil,
-                                                          payeeId: nil, type: "income",
-                                                          from: nil, to: nil, limit: nil).first)
+        let income = try XCTUnwrap(provider.transactions(
+            accountId: nil,
+            categoryId: nil,
+            payeeId: nil,
+            type: "income",
+            from: nil,
+            to: nil,
+            limit: nil
+        ).first)
         XCTAssertEqual(income.id, "tx-income")
         XCTAssertEqual(income.value, 3000.0, accuracy: 0.001)
         XCTAssertEqual(income.sourceAccountTitle, "Checking")
@@ -141,18 +160,30 @@ final class DataProviderTests: XCTestCase {
     func testExpenseSubcategoryTitle() throws {
         // Category "Groceries" has parent "Food" — title should be "Food: Groceries"
         let (provider, _) = try makeProvider()
-        let expense = try XCTUnwrap(provider.transactions(accountId: nil, categoryId: nil,
-                                                           payeeId: nil, type: "expense",
-                                                           from: nil, to: nil, limit: nil).first)
+        let expense = try XCTUnwrap(provider.transactions(
+            accountId: nil,
+            categoryId: nil,
+            payeeId: nil,
+            type: "expense",
+            from: nil,
+            to: nil,
+            limit: nil
+        ).first)
         XCTAssertEqual(expense.payeeTitle, "Tesco")
         XCTAssertEqual(expense.categoryTitle, "Food: Groceries")
     }
 
     func testTransferTitles() throws {
         let (provider, _) = try makeProvider()
-        let transfer = try XCTUnwrap(provider.transactions(accountId: nil, categoryId: nil,
-                                                            payeeId: nil, type: "transfer",
-                                                            from: nil, to: nil, limit: nil).first)
+        let transfer = try XCTUnwrap(provider.transactions(
+            accountId: nil,
+            categoryId: nil,
+            payeeId: nil,
+            type: "transfer",
+            from: nil,
+            to: nil,
+            limit: nil
+        ).first)
         XCTAssertEqual(transfer.sourceAccountTitle, "Checking")
         XCTAssertEqual(transfer.destinationAccountTitle, "Savings")
         XCTAssertEqual(transfer.destinationAccountId, "acct-savings")
@@ -160,8 +191,15 @@ final class DataProviderTests: XCTestCase {
 
     func testTransactionsSortedNewestFirst() throws {
         let (provider, _) = try makeProvider()
-        let txns = provider.transactions(accountId: nil, categoryId: nil, payeeId: nil,
-                                         type: nil, from: nil, to: nil, limit: nil)
+        let txns = provider.transactions(
+            accountId: nil,
+            categoryId: nil,
+            payeeId: nil,
+            type: nil,
+            from: nil,
+            to: nil,
+            limit: nil
+        )
         let dates = txns.map { $0.dateCreated }
         XCTAssertEqual(dates, dates.sorted(by: >))
     }
@@ -169,33 +207,60 @@ final class DataProviderTests: XCTestCase {
     func testFilterTransactionsByAccount() throws {
         let (provider, _) = try makeProvider()
         // Savings is only involved in the transfer
-        let txns = provider.transactions(accountId: "acct-savings", categoryId: nil,
-                                         payeeId: nil, type: nil, from: nil, to: nil, limit: nil)
+        let txns = provider.transactions(
+            accountId: "acct-savings",
+            categoryId: nil,
+            payeeId: nil,
+            type: nil,
+            from: nil,
+            to: nil,
+            limit: nil
+        )
         XCTAssertEqual(txns.count, 1)
         XCTAssertEqual(txns.first?.id, "tx-transfer")
     }
 
     func testFilterTransactionsByCategory() throws {
         let (provider, _) = try makeProvider()
-        let txns = provider.transactions(accountId: nil, categoryId: "cat-salary",
-                                         payeeId: nil, type: nil, from: nil, to: nil, limit: nil)
+        let txns = provider.transactions(
+            accountId: nil,
+            categoryId: "cat-salary",
+            payeeId: nil,
+            type: nil,
+            from: nil,
+            to: nil,
+            limit: nil
+        )
         XCTAssertEqual(txns.count, 1)
         XCTAssertEqual(txns.first?.id, "tx-income")
     }
 
     func testFilterTransactionsByPayee() throws {
         let (provider, _) = try makeProvider()
-        let txns = provider.transactions(accountId: nil, categoryId: nil,
-                                         payeeId: "payee-tesco", type: nil,
-                                         from: nil, to: nil, limit: nil)
+        let txns = provider.transactions(
+            accountId: nil,
+            categoryId: nil,
+            payeeId: "payee-tesco",
+            type: nil,
+            from: nil,
+            to: nil,
+            limit: nil
+        )
         XCTAssertEqual(txns.count, 1)
         XCTAssertEqual(txns.first?.id, "tx-expense")
     }
 
     func testFilterTransactionsLimit() throws {
         let (provider, _) = try makeProvider()
-        let txns = provider.transactions(accountId: nil, categoryId: nil, payeeId: nil,
-                                         type: nil, from: nil, to: nil, limit: 2)
+        let txns = provider.transactions(
+            accountId: nil,
+            categoryId: nil,
+            payeeId: nil,
+            type: nil,
+            from: nil,
+            to: nil,
+            limit: 2
+        )
         XCTAssertEqual(txns.count, 2)
     }
 
@@ -246,7 +311,7 @@ final class DataProviderTests: XCTestCase {
     func testPayeeSearch() throws {
         let (provider, _) = try makeProvider()
         XCTAssertEqual(provider.payees(query: "tes").count, 1)
-        XCTAssertEqual(provider.payees(query: "TES").count, 1)  // case-insensitive
+        XCTAssertEqual(provider.payees(query: "TES").count, 1) // case-insensitive
         XCTAssertEqual(provider.payees(query: "xyz").count, 0)
     }
 
@@ -293,8 +358,13 @@ final class DataProviderTests: XCTestCase {
 
     func testCreateAccount() throws {
         let (provider, url) = try makeProvider()
-        let acct = try provider.createAccount(title: "Cash Wallet", type: "cash",
-                                               currencyId: "GBP", startBalance: 50.0, groupId: "")
+        let acct = try provider.createAccount(
+            title: "Cash Wallet",
+            type: "cash",
+            currencyId: "GBP",
+            startBalance: 50.0,
+            groupId: ""
+        )
         XCTAssertFalse(acct.id.isEmpty)
         XCTAssertEqual(acct.type, "cash")
         // Persisted correctly
@@ -305,11 +375,17 @@ final class DataProviderTests: XCTestCase {
 
     func testUpdateAccount() throws {
         let (provider, url) = try makeProvider()
-        let updated = try provider.updateAccount(id: "acct-checking", title: "Main Checking",
-                                                  type: nil, isActive: nil, groupId: nil,
-                                                  sortOrder: nil, startBalance: nil)
+        let updated = try provider.updateAccount(
+            id: "acct-checking",
+            title: "Main Checking",
+            type: nil,
+            isActive: nil,
+            groupId: nil,
+            sortOrder: nil,
+            startBalance: nil
+        )
         XCTAssertEqual(updated.title, "Main Checking")
-        XCTAssertEqual(updated.startBalance, 1000.0, accuracy: 0.001)  // unchanged
+        XCTAssertEqual(updated.startBalance, 1000.0, accuracy: 0.001) // unchanged
         XCTAssertEqual(try JSONDataProvider(url: url).account(id: "acct-checking")?.title, "Main Checking")
     }
 
@@ -322,38 +398,63 @@ final class DataProviderTests: XCTestCase {
 
     func testUpdateAccountNotFound() throws {
         let (provider, _) = try makeProvider()
-        XCTAssertThrowsError(try provider.updateAccount(id: "no-such-account", title: nil,
-                                                         type: nil, isActive: nil, groupId: nil,
-                                                         sortOrder: nil, startBalance: nil))
+        XCTAssertThrowsError(try provider.updateAccount(
+            id: "no-such-account",
+            title: nil,
+            type: nil,
+            isActive: nil,
+            groupId: nil,
+            sortOrder: nil,
+            startBalance: nil
+        ))
     }
 
     // MARK: - CRUD: Transactions
 
     func testCreateTransaction() throws {
         let (provider, url) = try makeProvider()
-        let tx = try provider.createTransaction(value: 12.99, currencyId: "GBP", type: "expense",
-                                                 sourceAccountId: "acct-checking",
-                                                 destinationAccountId: nil,
-                                                 payeeId: "payee-tesco",
-                                                 categoryId: "cat-groceries",
-                                                 notes: "Lunch", dateCreated: nil)
+        let tx = try provider.createTransaction(
+            value: 12.99,
+            currencyId: "GBP",
+            type: "expense",
+            sourceAccountId: "acct-checking",
+            destinationAccountId: nil,
+            payeeId: "payee-tesco",
+            categoryId: "cat-groceries",
+            notes: "Lunch",
+            dateCreated: nil
+        )
         XCTAssertEqual(tx.value, 12.99, accuracy: 0.001)
         XCTAssertEqual(tx.payeeTitle, "Tesco")
         XCTAssertEqual(tx.categoryTitle, "Food: Groceries")
         XCTAssertEqual(tx.sourceAccountTitle, "Checking")
         let reloaded = try JSONDataProvider(url: url)
-        XCTAssertTrue(reloaded.transactions(accountId: nil, categoryId: nil, payeeId: nil,
-                                             type: nil, from: nil, to: nil, limit: nil)
-                                .contains { $0.id == tx.id })
+        let reloadedTxns = reloaded.transactions(
+            accountId: nil,
+            categoryId: nil,
+            payeeId: nil,
+            type: nil,
+            from: nil,
+            to: nil,
+            limit: nil
+        )
+        XCTAssertTrue(reloadedTxns.contains { $0.id == tx.id })
     }
 
     func testDeleteTransaction() throws {
         let (provider, url) = try makeProvider()
         try provider.deleteTransaction(id: "tx-income")
         let reloaded = try JSONDataProvider(url: url)
-        XCTAssertFalse(reloaded.transactions(accountId: nil, categoryId: nil, payeeId: nil,
-                                              type: nil, from: nil, to: nil, limit: nil)
-                                .contains { $0.id == "tx-income" })
+        let reloadedTxns = reloaded.transactions(
+            accountId: nil,
+            categoryId: nil,
+            payeeId: nil,
+            type: nil,
+            from: nil,
+            to: nil,
+            limit: nil
+        )
+        XCTAssertFalse(reloadedTxns.contains { $0.id == "tx-income" })
     }
 
     func testDeleteTransactionNotFound() throws {
@@ -375,7 +476,7 @@ final class DataProviderTests: XCTestCase {
         let updated = try provider.updatePayee(id: "payee-tesco", title: "Tesco Express")
         XCTAssertEqual(updated.title, "Tesco Express")
         XCTAssertEqual(try JSONDataProvider(url: url).payees(query: nil)
-                            .first { $0.id == "payee-tesco" }?.title, "Tesco Express")
+            .first { $0.id == "payee-tesco" }?.title, "Tesco Express")
     }
 
     func testDeletePayee() throws {
@@ -420,10 +521,16 @@ final class DataProviderTests: XCTestCase {
         let (provider, url) = try makeProvider()
         let date = Date(timeIntervalSince1970: 1_740_000_000)
         let s = try provider.createScheduledTransaction(
-            value: 800.0, currencyId: "GBP", type: "expense",
-            accountId: "acct-checking", destinationAccountId: nil,
-            dateScheduled: date, interval: "monthly", isAutomatic: false,
-            payeeId: "payee-tesco", categoryId: "cat-groceries"
+            value: 800.0,
+            currencyId: "GBP",
+            type: "expense",
+            accountId: "acct-checking",
+            destinationAccountId: nil,
+            dateScheduled: date,
+            interval: "monthly",
+            isAutomatic: false,
+            payeeId: "payee-tesco",
+            categoryId: "cat-groceries"
         )
         XCTAssertEqual(s.value, 800.0, accuracy: 0.001)
         XCTAssertEqual(s.interval, "monthly")
@@ -439,7 +546,7 @@ final class DataProviderTests: XCTestCase {
     func testRoundTripPreservesGroups() throws {
         let (provider, url) = try makeProvider()
         _ = try provider.createPayee(title: "Test")
-        let json = try JSONSerialization.jsonObject(with: Data(contentsOf: url)) as! [String: Any]
+        let json = try XCTUnwrap(try JSONSerialization.jsonObject(with: Data(contentsOf: url)) as? [String: Any])
         let groups = json["groups"] as? [[String: Any]]
         XCTAssertEqual(groups?.count, 1)
         XCTAssertEqual(groups?.first?["title"] as? String, "Accounts")
@@ -447,10 +554,16 @@ final class DataProviderTests: XCTestCase {
 
     func testRoundTripPreservesDateCreated() throws {
         let (provider, url) = try makeProvider()
-        _ = try provider.updateAccount(id: "acct-checking", title: "Updated",
-                                        type: nil, isActive: nil, groupId: nil,
-                                        sortOrder: nil, startBalance: nil)
-        let json = try JSONSerialization.jsonObject(with: Data(contentsOf: url)) as! [String: Any]
+        _ = try provider.updateAccount(
+            id: "acct-checking",
+            title: "Updated",
+            type: nil,
+            isActive: nil,
+            groupId: nil,
+            sortOrder: nil,
+            startBalance: nil
+        )
+        let json = try XCTUnwrap(try JSONSerialization.jsonObject(with: Data(contentsOf: url)) as? [String: Any])
         let accounts = try XCTUnwrap(json["accounts"] as? [[String: Any]])
         let checking = try XCTUnwrap(accounts.first { $0["id"] as? String == "acct-checking" })
         XCTAssertEqual(checking["created"] as? String, "2025-01-01T10:00:00Z")
@@ -459,19 +572,24 @@ final class DataProviderTests: XCTestCase {
     func testRoundTripPreservesVersion() throws {
         let (provider, url) = try makeProvider()
         _ = try provider.createPayee(title: "Test")
-        let json = try JSONSerialization.jsonObject(with: Data(contentsOf: url)) as! [String: Any]
+        let json = try XCTUnwrap(try JSONSerialization.jsonObject(with: Data(contentsOf: url)) as? [String: Any])
         XCTAssertEqual(json["version"] as? Int, 2)
     }
 
     func testRoundTripAccountTypeInt() throws {
         // Create cash account, reload, verify type survived int→string→int round-trip
         let (provider, url) = try makeProvider()
-        let acct = try provider.createAccount(title: "Wallet", type: "cash",
-                                               currencyId: "GBP", startBalance: 0.0, groupId: "")
-        let json = try JSONSerialization.jsonObject(with: Data(contentsOf: url)) as! [String: Any]
+        let acct = try provider.createAccount(
+            title: "Wallet",
+            type: "cash",
+            currencyId: "GBP",
+            startBalance: 0.0,
+            groupId: ""
+        )
+        let json = try XCTUnwrap(try JSONSerialization.jsonObject(with: Data(contentsOf: url)) as? [String: Any])
         let accounts = try XCTUnwrap(json["accounts"] as? [[String: Any]])
         let wallet = try XCTUnwrap(accounts.first { $0["id"] as? String == acct.id })
-        XCTAssertEqual(wallet["type"] as? Int, 0)  // cash = 0
+        XCTAssertEqual(wallet["type"] as? Int, 0) // cash = 0
     }
 
     // MARK: - Error cases
@@ -479,7 +597,7 @@ final class DataProviderTests: XCTestCase {
     func testInvalidJSONThrows() throws {
         let url = FileManager.default.temporaryDirectory
             .appendingPathComponent(UUID().uuidString + ".json")
-        try "not valid json".data(using: .utf8)!.write(to: url)
+        try Data("not valid json".utf8).write(to: url)
         addTeardownBlock { try? FileManager.default.removeItem(at: url) }
         XCTAssertThrowsError(try JSONDataProvider(url: url))
     }

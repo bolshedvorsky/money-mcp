@@ -4,7 +4,7 @@ import MCP
 enum AccountTools {
     static let names: Set<String> = [
         "list_accounts", "get_account",
-        "create_account", "update_account", "delete_account",
+        "create_account", "update_account", "delete_account"
     ]
 
     static var definitions: [Tool] {
@@ -16,8 +16,8 @@ enum AccountTools {
                     "type": "object",
                     "properties": [
                         "active_only": ["type": "boolean", "description": "Only return active accounts. Defaults to true."],
-                        "type": ["type": "string", "description": "Filter by account type: cash, bank, credit, loan, mortgage, asset, savings, investment."],
-                    ],
+                        "type": ["type": "string", "description": "Filter by account type: cash, bank, credit, loan, mortgage, asset, savings, investment."]
+                    ]
                 ]
             ),
             Tool(
@@ -26,9 +26,9 @@ enum AccountTools {
                 inputSchema: [
                     "type": "object",
                     "properties": [
-                        "id": ["type": "string", "description": "Account ID."],
+                        "id": ["type": "string", "description": "Account ID."]
                     ],
-                    "required": ["id"],
+                    "required": ["id"]
                 ]
             ),
             Tool(
@@ -41,9 +41,9 @@ enum AccountTools {
                         "type": ["type": "string", "description": "Account type: cash, bank, credit, loan, mortgage, asset, savings, investment."],
                         "currency_id": ["type": "string", "description": "ISO 4217 currency code, e.g. USD."],
                         "start_balance": ["type": "number", "description": "Opening balance. Defaults to 0."],
-                        "group_id": ["type": "string", "description": "Account group ID. Leave empty for default group."],
+                        "group_id": ["type": "string", "description": "Account group ID. Leave empty for default group."]
                     ],
-                    "required": ["title", "type", "currency_id"],
+                    "required": ["title", "type", "currency_id"]
                 ]
             ),
             Tool(
@@ -58,9 +58,9 @@ enum AccountTools {
                         "is_active": ["type": "boolean", "description": "Set active/inactive."],
                         "group_id": ["type": "string", "description": "New group ID."],
                         "sort_order": ["type": "integer", "description": "Display sort position."],
-                        "start_balance": ["type": "number", "description": "New opening balance (also updates current balance)."],
+                        "start_balance": ["type": "number", "description": "New opening balance (also updates current balance)."]
                     ],
-                    "required": ["id"],
+                    "required": ["id"]
                 ]
             ),
             Tool(
@@ -69,11 +69,11 @@ enum AccountTools {
                 inputSchema: [
                     "type": "object",
                     "properties": [
-                        "id": ["type": "string", "description": "Account ID to delete."],
+                        "id": ["type": "string", "description": "Account ID to delete."]
                     ],
-                    "required": ["id"],
+                    "required": ["id"]
                 ]
-            ),
+            )
         ]
     }
 
@@ -93,14 +93,16 @@ enum AccountTools {
             guard let account = provider.account(id: id) else {
                 return [.text(text: "No account found with id: \(id)", annotations: nil, _meta: nil)]
             }
+
             return [.text(text: prettyJSON(account), annotations: nil, _meta: nil)]
 
         case "create_account":
             guard
-                let title      = arguments?["title"]?.stringValue,
-                let type       = arguments?["type"]?.stringValue,
+                let title = arguments?["title"]?.stringValue,
+                let type = arguments?["type"]?.stringValue,
                 let currencyId = arguments?["currency_id"]?.stringValue
             else { throw MCPError.invalidParams("Missing required parameters: title, type, currency_id") }
+
             let balance = arguments?["start_balance"].flatMap { Double($0) } ?? 0
             let groupId = arguments?["group_id"]?.stringValue ?? ""
             let account = try provider.createAccount(title: title, type: type, currencyId: currencyId, startBalance: balance, groupId: groupId)
@@ -110,13 +112,14 @@ enum AccountTools {
             guard let id = arguments?["id"]?.stringValue else {
                 throw MCPError.invalidParams("Missing required parameter: id")
             }
+
             let account = try provider.updateAccount(
                 id: id,
-                title:       arguments?["title"]?.stringValue,
-                type:        arguments?["type"]?.stringValue,
-                isActive:    arguments?["is_active"]?.boolValue,
-                groupId:     arguments?["group_id"]?.stringValue,
-                sortOrder:   arguments?["sort_order"]?.intValue,
+                title: arguments?["title"]?.stringValue,
+                type: arguments?["type"]?.stringValue,
+                isActive: arguments?["is_active"]?.boolValue,
+                groupId: arguments?["group_id"]?.stringValue,
+                sortOrder: arguments?["sort_order"]?.intValue,
                 startBalance: arguments?["start_balance"].flatMap { Double($0) }
             )
             return [.text(text: prettyJSON(account), annotations: nil, _meta: nil)]
@@ -125,6 +128,7 @@ enum AccountTools {
             guard let id = arguments?["id"]?.stringValue else {
                 throw MCPError.invalidParams("Missing required parameter: id")
             }
+
             try provider.deleteAccount(id: id)
             return [.text(text: "Account deleted: \(id)", annotations: nil, _meta: nil)]
 

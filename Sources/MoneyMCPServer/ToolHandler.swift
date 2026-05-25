@@ -6,12 +6,12 @@ struct ToolHandler {
 
     var allDefinitions: [Tool] {
         AccountTools.definitions +
-        TransactionTools.definitions +
-        BudgetTools.definitions +
-        CategoryTools.definitions +
-        CurrencyTools.definitions +
-        PayeeTools.definitions +
-        ScheduledTransactionTools.definitions
+            TransactionTools.definitions +
+            BudgetTools.definitions +
+            CategoryTools.definitions +
+            CurrencyTools.definitions +
+            PayeeTools.definitions +
+            ScheduledTransactionTools.definitions
     }
 
     func handle(name: String, arguments: [String: Value]?) throws -> [Tool.Content] {

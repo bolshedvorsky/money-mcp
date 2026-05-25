@@ -4,7 +4,7 @@ import MCP
 enum CurrencyTools {
     static let names: Set<String> = [
         "list_currencies", "convert_amount",
-        "create_currency", "update_currency", "delete_currency",
+        "create_currency", "update_currency", "delete_currency"
     ]
 
     static var definitions: [Tool] {
@@ -15,8 +15,8 @@ enum CurrencyTools {
                 inputSchema: [
                     "type": "object",
                     "properties": [
-                        "active_only": ["type": "boolean", "description": "Only return currencies used by at least one account."],
-                    ],
+                        "active_only": ["type": "boolean", "description": "Only return currencies used by at least one account."]
+                    ]
                 ]
             ),
             Tool(
@@ -26,10 +26,10 @@ enum CurrencyTools {
                     "type": "object",
                     "properties": [
                         "amount": ["type": "number", "description": "Amount to convert."],
-                        "from":   ["type": "string", "description": "Source currency code, e.g. USD."],
-                        "to":     ["type": "string", "description": "Target currency code, e.g. EUR."],
+                        "from": ["type": "string", "description": "Source currency code, e.g. USD."],
+                        "to": ["type": "string", "description": "Target currency code, e.g. EUR."]
                     ],
-                    "required": ["amount", "from", "to"],
+                    "required": ["amount", "from", "to"]
                 ]
             ),
             Tool(
@@ -38,11 +38,11 @@ enum CurrencyTools {
                 inputSchema: [
                     "type": "object",
                     "properties": [
-                        "id":            ["type": "string",  "description": "ISO 4217 currency code, e.g. JPY."],
-                        "exchange_rate": ["type": "number",  "description": "Exchange rate relative to the default currency."],
-                        "is_default":    ["type": "boolean", "description": "Set as the default currency. Clears the existing default. Defaults to false."],
+                        "id": ["type": "string", "description": "ISO 4217 currency code, e.g. JPY."],
+                        "exchange_rate": ["type": "number", "description": "Exchange rate relative to the default currency."],
+                        "is_default": ["type": "boolean", "description": "Set as the default currency. Clears the existing default. Defaults to false."]
                     ],
-                    "required": ["id", "exchange_rate"],
+                    "required": ["id", "exchange_rate"]
                 ]
             ),
             Tool(
@@ -51,11 +51,11 @@ enum CurrencyTools {
                 inputSchema: [
                     "type": "object",
                     "properties": [
-                        "id":            ["type": "string",  "description": "Currency code to update."],
-                        "exchange_rate": ["type": "number",  "description": "New exchange rate."],
-                        "is_default":    ["type": "boolean", "description": "Set as the default currency."],
+                        "id": ["type": "string", "description": "Currency code to update."],
+                        "exchange_rate": ["type": "number", "description": "New exchange rate."],
+                        "is_default": ["type": "boolean", "description": "Set as the default currency."]
                     ],
-                    "required": ["id"],
+                    "required": ["id"]
                 ]
             ),
             Tool(
@@ -64,11 +64,11 @@ enum CurrencyTools {
                 inputSchema: [
                     "type": "object",
                     "properties": [
-                        "id": ["type": "string", "description": "Currency code to delete, e.g. USD."],
+                        "id": ["type": "string", "description": "Currency code to delete, e.g. USD."]
                     ],
-                    "required": ["id"],
+                    "required": ["id"]
                 ]
-            ),
+            )
         ]
     }
 
@@ -84,24 +84,27 @@ enum CurrencyTools {
         case "convert_amount":
             guard
                 let amountV = arguments?["amount"], let amount = Double(amountV),
-                let from    = arguments?["from"]?.stringValue,
-                let to      = arguments?["to"]?.stringValue
+                let from = arguments?["from"]?.stringValue,
+                let to = arguments?["to"]?.stringValue
             else { throw MCPError.invalidParams("Missing required parameters: amount, from, to") }
+
             if from == to {
                 return [.text(text: "\(amount) \(to)", annotations: nil, _meta: nil)]
             }
             guard let rate = provider.exchangeRate(from: from, to: to) else {
                 return [.text(text: "Exchange rate not available for \(from) → \(to)", annotations: nil, _meta: nil)]
             }
+
             let result: [String: String] = ["from": "\(amount) \(from)", "to": "\(amount * rate) \(to)", "rate": "\(rate)"]
             return [.text(text: prettyJSON(result), annotations: nil, _meta: nil)]
 
         case "create_currency":
             guard
-                let id           = arguments?["id"]?.stringValue,
-                let rateV        = arguments?["exchange_rate"],
+                let id = arguments?["id"]?.stringValue,
+                let rateV = arguments?["exchange_rate"],
                 let exchangeRate = Double(rateV)
             else { throw MCPError.invalidParams("Missing required parameters: id, exchange_rate") }
+
             let currency = try provider.createCurrency(
                 id: id, exchangeRate: exchangeRate,
                 isDefault: arguments?["is_default"]?.boolValue ?? false
@@ -112,10 +115,11 @@ enum CurrencyTools {
             guard let id = arguments?["id"]?.stringValue else {
                 throw MCPError.invalidParams("Missing required parameter: id")
             }
+
             let currency = try provider.updateCurrency(
                 id: id,
                 exchangeRate: arguments?["exchange_rate"].flatMap { Double($0) },
-                isDefault:    arguments?["is_default"]?.boolValue
+                isDefault: arguments?["is_default"]?.boolValue
             )
             return [.text(text: prettyJSON(currency), annotations: nil, _meta: nil)]
 
@@ -123,6 +127,7 @@ enum CurrencyTools {
             guard let id = arguments?["id"]?.stringValue else {
                 throw MCPError.invalidParams("Missing required parameter: id")
             }
+
             try provider.deleteCurrency(id: id)
             return [.text(text: "Currency deleted: \(id)", annotations: nil, _meta: nil)]
 

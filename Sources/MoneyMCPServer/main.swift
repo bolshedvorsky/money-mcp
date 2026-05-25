@@ -15,7 +15,7 @@ Task {
         }
 
         let provider = try JSONDataProvider(url: dataURL)
-        let handler  = ToolHandler(provider: provider)
+        let handler = ToolHandler(provider: provider)
 
         let server = Server(
             name: "money",

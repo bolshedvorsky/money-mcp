@@ -4,7 +4,7 @@ import MCP
 enum CategoryTools {
     static let names: Set<String> = [
         "list_categories",
-        "create_category", "update_category", "delete_category",
+        "create_category", "update_category", "delete_category"
     ]
 
     static var definitions: [Tool] {
@@ -15,9 +15,9 @@ enum CategoryTools {
                 inputSchema: [
                     "type": "object",
                     "properties": [
-                        "parent_id":     ["type": "string",  "description": "Return only children of this parent category ID."],
-                        "top_level_only": ["type": "boolean", "description": "Return only top-level (root) categories."],
-                    ],
+                        "parent_id": ["type": "string", "description": "Return only children of this parent category ID."],
+                        "top_level_only": ["type": "boolean", "description": "Return only top-level (root) categories."]
+                    ]
                 ]
             ),
             Tool(
@@ -26,11 +26,11 @@ enum CategoryTools {
                 inputSchema: [
                     "type": "object",
                     "properties": [
-                        "title":      ["type": "string", "description": "Category name."],
+                        "title": ["type": "string", "description": "Category name."],
                         "image_name": ["type": "string", "description": "SF Symbol name for the icon. Defaults to 'tag'."],
-                        "parent_id":  ["type": "string", "description": "Parent category ID for sub-categories. Omit for top-level."],
+                        "parent_id": ["type": "string", "description": "Parent category ID for sub-categories. Omit for top-level."]
                     ],
-                    "required": ["title"],
+                    "required": ["title"]
                 ]
             ),
             Tool(
@@ -39,11 +39,11 @@ enum CategoryTools {
                 inputSchema: [
                     "type": "object",
                     "properties": [
-                        "id":         ["type": "string", "description": "Category ID to update."],
-                        "title":      ["type": "string", "description": "New category name."],
-                        "image_name": ["type": "string", "description": "New SF Symbol name."],
+                        "id": ["type": "string", "description": "Category ID to update."],
+                        "title": ["type": "string", "description": "New category name."],
+                        "image_name": ["type": "string", "description": "New SF Symbol name."]
                     ],
-                    "required": ["id"],
+                    "required": ["id"]
                 ]
             ),
             Tool(
@@ -52,11 +52,11 @@ enum CategoryTools {
                 inputSchema: [
                     "type": "object",
                     "properties": [
-                        "id": ["type": "string", "description": "Category ID to delete."],
+                        "id": ["type": "string", "description": "Category ID to delete."]
                     ],
-                    "required": ["id"],
+                    "required": ["id"]
                 ]
-            ),
+            )
         ]
     }
 
@@ -75,10 +75,11 @@ enum CategoryTools {
             guard let title = arguments?["title"]?.stringValue else {
                 throw MCPError.invalidParams("Missing required parameter: title")
             }
+
             let category = try provider.createCategory(
                 title: title,
                 imageName: arguments?["image_name"]?.stringValue,
-                parentId:  arguments?["parent_id"]?.stringValue
+                parentId: arguments?["parent_id"]?.stringValue
             )
             return [.text(text: prettyJSON(category), annotations: nil, _meta: nil)]
 
@@ -86,9 +87,10 @@ enum CategoryTools {
             guard let id = arguments?["id"]?.stringValue else {
                 throw MCPError.invalidParams("Missing required parameter: id")
             }
+
             let category = try provider.updateCategory(
                 id: id,
-                title:     arguments?["title"]?.stringValue,
+                title: arguments?["title"]?.stringValue,
                 imageName: arguments?["image_name"]?.stringValue
             )
             return [.text(text: prettyJSON(category), annotations: nil, _meta: nil)]
@@ -97,6 +99,7 @@ enum CategoryTools {
             guard let id = arguments?["id"]?.stringValue else {
                 throw MCPError.invalidParams("Missing required parameter: id")
             }
+
             try provider.deleteCategory(id: id)
             return [.text(text: "Category deleted: \(id)", annotations: nil, _meta: nil)]
 

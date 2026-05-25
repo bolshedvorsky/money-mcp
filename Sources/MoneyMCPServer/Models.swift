@@ -84,7 +84,7 @@ struct MCPScheduledTransaction: Codable {
     let categoryTitle: String
 }
 
-// In-memory working model for the MCP server (not persisted directly).
+/// In-memory working model for the MCP server (not persisted directly).
 struct MoneySnapshot {
     var accounts: [MCPAccount]
     var transactions: [MCPTransaction]

@@ -4,7 +4,7 @@ import MCP
 enum PayeeTools {
     static let names: Set<String> = [
         "list_payees",
-        "create_payee", "update_payee", "delete_payee",
+        "create_payee", "update_payee", "delete_payee"
     ]
 
     static var definitions: [Tool] {
@@ -15,8 +15,8 @@ enum PayeeTools {
                 inputSchema: [
                     "type": "object",
                     "properties": [
-                        "query": ["type": "string", "description": "Search payees by name (case-insensitive substring match)."],
-                    ],
+                        "query": ["type": "string", "description": "Search payees by name (case-insensitive substring match)."]
+                    ]
                 ]
             ),
             Tool(
@@ -25,9 +25,9 @@ enum PayeeTools {
                 inputSchema: [
                     "type": "object",
                     "properties": [
-                        "title": ["type": "string", "description": "Payee name."],
+                        "title": ["type": "string", "description": "Payee name."]
                     ],
-                    "required": ["title"],
+                    "required": ["title"]
                 ]
             ),
             Tool(
@@ -36,10 +36,10 @@ enum PayeeTools {
                 inputSchema: [
                     "type": "object",
                     "properties": [
-                        "id":    ["type": "string", "description": "Payee ID to update."],
-                        "title": ["type": "string", "description": "New payee name."],
+                        "id": ["type": "string", "description": "Payee ID to update."],
+                        "title": ["type": "string", "description": "New payee name."]
                     ],
-                    "required": ["id", "title"],
+                    "required": ["id", "title"]
                 ]
             ),
             Tool(
@@ -48,11 +48,11 @@ enum PayeeTools {
                 inputSchema: [
                     "type": "object",
                     "properties": [
-                        "id": ["type": "string", "description": "Payee ID to delete."],
+                        "id": ["type": "string", "description": "Payee ID to delete."]
                     ],
-                    "required": ["id"],
+                    "required": ["id"]
                 ]
-            ),
+            )
         ]
     }
 
@@ -66,14 +66,16 @@ enum PayeeTools {
             guard let title = arguments?["title"]?.stringValue else {
                 throw MCPError.invalidParams("Missing required parameter: title")
             }
+
             let payee = try provider.createPayee(title: title)
             return [.text(text: prettyJSON(payee), annotations: nil, _meta: nil)]
 
         case "update_payee":
             guard
-                let id    = arguments?["id"]?.stringValue,
+                let id = arguments?["id"]?.stringValue,
                 let title = arguments?["title"]?.stringValue
             else { throw MCPError.invalidParams("Missing required parameters: id, title") }
+
             let payee = try provider.updatePayee(id: id, title: title)
             return [.text(text: prettyJSON(payee), annotations: nil, _meta: nil)]
 
@@ -81,6 +83,7 @@ enum PayeeTools {
             guard let id = arguments?["id"]?.stringValue else {
                 throw MCPError.invalidParams("Missing required parameter: id")
             }
+
             try provider.deletePayee(id: id)
             return [.text(text: "Payee deleted: \(id)", annotations: nil, _meta: nil)]
 

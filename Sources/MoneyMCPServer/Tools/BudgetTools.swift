@@ -4,7 +4,7 @@ import MCP
 enum BudgetTools {
     static let names: Set<String> = [
         "list_budgets",
-        "create_budget", "update_budget", "delete_budget",
+        "create_budget", "update_budget", "delete_budget"
     ]
 
     static var definitions: [Tool] {
@@ -15,9 +15,9 @@ enum BudgetTools {
                 inputSchema: [
                     "type": "object",
                     "properties": [
-                        "type":             ["type": "string",  "description": "Filter by budget type: income or expense."],
-                        "over_budget_only": ["type": "boolean", "description": "Only return budgets where current >= target."],
-                    ],
+                        "type": ["type": "string", "description": "Filter by budget type: income or expense."],
+                        "over_budget_only": ["type": "boolean", "description": "Only return budgets where current >= target."]
+                    ]
                 ]
             ),
             Tool(
@@ -26,11 +26,11 @@ enum BudgetTools {
                 inputSchema: [
                     "type": "object",
                     "properties": [
-                        "type":        ["type": "string", "description": "Budget type: income or expense."],
+                        "type": ["type": "string", "description": "Budget type: income or expense."],
                         "category_id": ["type": "string", "description": "Category ID this budget applies to."],
-                        "target":      ["type": "number", "description": "Target amount for this budget period."],
+                        "target": ["type": "number", "description": "Target amount for this budget period."]
                     ],
-                    "required": ["type", "category_id", "target"],
+                    "required": ["type", "category_id", "target"]
                 ]
             ),
             Tool(
@@ -39,11 +39,11 @@ enum BudgetTools {
                 inputSchema: [
                     "type": "object",
                     "properties": [
-                        "id":     ["type": "string", "description": "Budget ID to update."],
-                        "type":   ["type": "string", "description": "New budget type: income or expense."],
-                        "target": ["type": "number", "description": "New target amount."],
+                        "id": ["type": "string", "description": "Budget ID to update."],
+                        "type": ["type": "string", "description": "New budget type: income or expense."],
+                        "target": ["type": "number", "description": "New target amount."]
                     ],
-                    "required": ["id"],
+                    "required": ["id"]
                 ]
             ),
             Tool(
@@ -52,11 +52,11 @@ enum BudgetTools {
                 inputSchema: [
                     "type": "object",
                     "properties": [
-                        "id": ["type": "string", "description": "Budget ID to delete."],
+                        "id": ["type": "string", "description": "Budget ID to delete."]
                     ],
-                    "required": ["id"],
+                    "required": ["id"]
                 ]
-            ),
+            )
         ]
     }
 
@@ -74,11 +74,12 @@ enum BudgetTools {
 
         case "create_budget":
             guard
-                let type       = arguments?["type"]?.stringValue,
+                let type = arguments?["type"]?.stringValue,
                 let categoryId = arguments?["category_id"]?.stringValue,
-                let targetV    = arguments?["target"],
-                let target     = Double(targetV)
+                let targetV = arguments?["target"],
+                let target = Double(targetV)
             else { throw MCPError.invalidParams("Missing required parameters: type, category_id, target") }
+
             let budget = try provider.createBudget(type: type, categoryId: categoryId, target: target)
             return [.text(text: prettyJSON(budget), annotations: nil, _meta: nil)]
 
@@ -86,9 +87,10 @@ enum BudgetTools {
             guard let id = arguments?["id"]?.stringValue else {
                 throw MCPError.invalidParams("Missing required parameter: id")
             }
+
             let budget = try provider.updateBudget(
                 id: id,
-                type:   arguments?["type"]?.stringValue,
+                type: arguments?["type"]?.stringValue,
                 target: arguments?["target"].flatMap { Double($0) }
             )
             return [.text(text: prettyJSON(budget), annotations: nil, _meta: nil)]
@@ -97,6 +99,7 @@ enum BudgetTools {
             guard let id = arguments?["id"]?.stringValue else {
                 throw MCPError.invalidParams("Missing required parameter: id")
             }
+
             try provider.deleteBudget(id: id)
             return [.text(text: "Budget deleted: \(id)", annotations: nil, _meta: nil)]
 
