@@ -100,10 +100,13 @@ enum ScheduledTransactionTools {
             else { throw MCPError.invalidParams("Missing required parameters: value, currency_id, type, account_id, date_scheduled, interval") }
 
             let s = try provider.createScheduledTransaction(
-                value: value, currencyId: currencyId, type: type,
+                value: value,
+                currencyId: currencyId,
+                type: type,
                 accountId: accountId,
                 destinationAccountId: arguments?["destination_account_id"]?.stringValue,
-                dateScheduled: dateScheduled, interval: interval,
+                dateScheduled: dateScheduled,
+                interval: interval,
                 isAutomatic: arguments?["is_automatic"]?.boolValue ?? false,
                 payeeId: arguments?["payee_id"]?.stringValue,
                 categoryId: arguments?["category_id"]?.stringValue

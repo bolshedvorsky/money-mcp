@@ -120,7 +120,9 @@ enum TransactionTools {
             else { throw MCPError.invalidParams("Missing required parameters: value, currency_id, type, source_account_id") }
 
             let t = try provider.createTransaction(
-                value: value, currencyId: currencyId, type: type,
+                value: value,
+                currencyId: currencyId,
+                type: type,
                 sourceAccountId: sourceAccountId,
                 destinationAccountId: arguments?["destination_account_id"]?.stringValue,
                 payeeId: arguments?["payee_id"]?.stringValue,

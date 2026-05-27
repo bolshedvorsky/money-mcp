@@ -106,7 +106,8 @@ enum CurrencyTools {
             else { throw MCPError.invalidParams("Missing required parameters: id, exchange_rate") }
 
             let currency = try provider.createCurrency(
-                id: id, exchangeRate: exchangeRate,
+                id: id,
+                exchangeRate: exchangeRate,
                 isDefault: arguments?["is_default"]?.boolValue ?? false
             )
             return [.text(text: prettyJSON(currency), annotations: nil, _meta: nil)]
