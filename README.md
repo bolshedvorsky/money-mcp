@@ -102,6 +102,8 @@ Once connected, Claude can answer questions and take actions across all your Mon
 - *"Create an expense of £45 at Tesco from my Checking account."*
 - *"What's my monthly rent scheduled transaction?"*
 - *"How much of my Food budget have I used this month?"*
+- *"Here's my bank statement for Checking in July — mark the matching transactions as reconciled."*
+- *"Which transactions in my Checking account are still unreconciled?"*
 
 ---
 
@@ -124,6 +126,7 @@ Once connected, Claude can answer questions and take actions across all your Mon
 | `update_transaction` | Update any field on an existing transaction |
 | `delete_transaction` | Delete a transaction |
 | `get_spending_by_category` | Total expenses grouped by category for a date range |
+| `set_transactions_reconciled` | Mark one or more transactions as reconciled or unreconciled, e.g. when matching against a bank statement |
 
 ### Budgets
 | Tool | Description |

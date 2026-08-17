@@ -118,6 +118,7 @@ final class DataProviderTests: XCTestCase {
             type: nil,
             from: nil,
             to: nil,
+            reconciled: nil,
             limit: nil
         )
         XCTAssertEqual(txns.count, 3)
@@ -132,6 +133,7 @@ final class DataProviderTests: XCTestCase {
             type: nil,
             from: nil,
             to: nil,
+            reconciled: nil,
             limit: nil
         )
         XCTAssertTrue(all.contains { $0.type == "income" })
@@ -148,6 +150,7 @@ final class DataProviderTests: XCTestCase {
             type: "income",
             from: nil,
             to: nil,
+            reconciled: nil,
             limit: nil
         ).first)
         XCTAssertEqual(income.id, "tx-income")
@@ -167,6 +170,7 @@ final class DataProviderTests: XCTestCase {
             type: "expense",
             from: nil,
             to: nil,
+            reconciled: nil,
             limit: nil
         ).first)
         XCTAssertEqual(expense.payeeTitle, "Tesco")
@@ -182,6 +186,7 @@ final class DataProviderTests: XCTestCase {
             type: "transfer",
             from: nil,
             to: nil,
+            reconciled: nil,
             limit: nil
         ).first)
         XCTAssertEqual(transfer.sourceAccountTitle, "Checking")
@@ -198,6 +203,7 @@ final class DataProviderTests: XCTestCase {
             type: nil,
             from: nil,
             to: nil,
+            reconciled: nil,
             limit: nil
         )
         let dates = txns.map { $0.dateCreated }
@@ -214,6 +220,7 @@ final class DataProviderTests: XCTestCase {
             type: nil,
             from: nil,
             to: nil,
+            reconciled: nil,
             limit: nil
         )
         XCTAssertEqual(txns.count, 1)
@@ -229,6 +236,7 @@ final class DataProviderTests: XCTestCase {
             type: nil,
             from: nil,
             to: nil,
+            reconciled: nil,
             limit: nil
         )
         XCTAssertEqual(txns.count, 1)
@@ -244,6 +252,7 @@ final class DataProviderTests: XCTestCase {
             type: nil,
             from: nil,
             to: nil,
+            reconciled: nil,
             limit: nil
         )
         XCTAssertEqual(txns.count, 1)
@@ -259,6 +268,7 @@ final class DataProviderTests: XCTestCase {
             type: nil,
             from: nil,
             to: nil,
+            reconciled: nil,
             limit: 2
         )
         XCTAssertEqual(txns.count, 2)
@@ -422,12 +432,14 @@ final class DataProviderTests: XCTestCase {
             payeeId: "payee-tesco",
             categoryId: "cat-groceries",
             notes: "Lunch",
-            dateCreated: nil
+            dateCreated: nil,
+            reconciled: false
         )
         XCTAssertEqual(tx.value, 12.99, accuracy: 0.001)
         XCTAssertEqual(tx.payeeTitle, "Tesco")
         XCTAssertEqual(tx.categoryTitle, "Food: Groceries")
         XCTAssertEqual(tx.sourceAccountTitle, "Checking")
+        XCTAssertFalse(tx.isReconciled)
         let reloaded = try JSONDataProvider(url: url)
         let reloadedTxns = reloaded.transactions(
             accountId: nil,
@@ -436,9 +448,107 @@ final class DataProviderTests: XCTestCase {
             type: nil,
             from: nil,
             to: nil,
+            reconciled: nil,
             limit: nil
         )
         XCTAssertTrue(reloadedTxns.contains { $0.id == tx.id })
+    }
+
+    func testCreateTransactionReconciled() throws {
+        let (provider, url) = try makeProvider()
+        let tx = try provider.createTransaction(
+            value: 12.99,
+            currencyId: "GBP",
+            type: "expense",
+            sourceAccountId: "acct-checking",
+            destinationAccountId: nil,
+            payeeId: "payee-tesco",
+            categoryId: "cat-groceries",
+            notes: "Lunch",
+            dateCreated: nil,
+            reconciled: true
+        )
+        XCTAssertTrue(tx.isReconciled)
+        let reloaded = try JSONDataProvider(url: url)
+        let reloadedTx = try XCTUnwrap(reloaded.transactions(
+            accountId: nil,
+            categoryId: nil,
+            payeeId: nil,
+            type: nil,
+            from: nil,
+            to: nil,
+            reconciled: nil,
+            limit: nil
+        ).first { $0.id == tx.id })
+        XCTAssertTrue(reloadedTx.isReconciled)
+    }
+
+    func testUpdateTransactionReconciled() throws {
+        let (provider, _) = try makeProvider()
+        let updated = try provider.updateTransaction(
+            id: "tx-income",
+            value: nil,
+            currencyId: nil,
+            type: nil,
+            sourceAccountId: nil,
+            destinationAccountId: nil,
+            payeeId: nil,
+            categoryId: nil,
+            notes: nil,
+            reconciled: true
+        )
+        XCTAssertTrue(updated.isReconciled)
+    }
+
+    func testFilterTransactionsByReconciled() throws {
+        let (provider, _) = try makeProvider()
+        _ = try provider.setReconciled(ids: ["tx-income"], reconciled: true)
+        let reconciled = provider.transactions(
+            accountId: nil,
+            categoryId: nil,
+            payeeId: nil,
+            type: nil,
+            from: nil,
+            to: nil,
+            reconciled: true,
+            limit: nil
+        )
+        XCTAssertEqual(reconciled.map(\.id), ["tx-income"])
+        let unreconciled = provider.transactions(
+            accountId: nil,
+            categoryId: nil,
+            payeeId: nil,
+            type: nil,
+            from: nil,
+            to: nil,
+            reconciled: false,
+            limit: nil
+        )
+        XCTAssertEqual(Set(unreconciled.map(\.id)), ["tx-expense", "tx-transfer"])
+    }
+
+    func testSetReconciledBulk() throws {
+        let (provider, url) = try makeProvider()
+        let updated = try provider.setReconciled(ids: ["tx-income", "tx-expense"], reconciled: true)
+        XCTAssertEqual(updated.count, 2)
+        XCTAssertTrue(updated.allSatisfy(\.isReconciled))
+        let reloaded = try JSONDataProvider(url: url)
+        let reloadedTxns = reloaded.transactions(
+            accountId: nil,
+            categoryId: nil,
+            payeeId: nil,
+            type: nil,
+            from: nil,
+            to: nil,
+            reconciled: true,
+            limit: nil
+        )
+        XCTAssertEqual(Set(reloadedTxns.map(\.id)), ["tx-income", "tx-expense"])
+    }
+
+    func testSetReconciledNotFoundThrows() throws {
+        let (provider, _) = try makeProvider()
+        XCTAssertThrowsError(try provider.setReconciled(ids: ["nonexistent"], reconciled: true))
     }
 
     func testDeleteTransaction() throws {
@@ -452,6 +562,7 @@ final class DataProviderTests: XCTestCase {
             type: nil,
             from: nil,
             to: nil,
+            reconciled: nil,
             limit: nil
         )
         XCTAssertFalse(reloadedTxns.contains { $0.id == "tx-income" })

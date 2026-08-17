@@ -84,8 +84,12 @@ enum ScheduledTransactionTools {
                 from: arguments?["from_date"]?.stringValue.flatMap(parseDate) ?? Date(),
                 to: arguments?["to_date"]?.stringValue.flatMap(parseDate)
             )
-            if let type = arguments?["type"]?.stringValue { results = results.filter { $0.type == type } }
-            if arguments?["automatic_only"]?.boolValue == true { results = results.filter { $0.isAutomatic } }
+            if let type = arguments?["type"]?.stringValue {
+                results = results.filter { $0.type == type }
+            }
+            if arguments?["automatic_only"]?.boolValue == true {
+                results = results.filter { $0.isAutomatic }
+            }
             return [.text(text: prettyJSON(results), annotations: nil, _meta: nil)]
 
         case "create_scheduled_transaction":

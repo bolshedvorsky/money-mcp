@@ -13,11 +13,14 @@ protocol DataProvider: AnyObject, Sendable {
     func deleteAccount(id: String) throws
 
     // Transactions
-    func transactions(accountId: String?, categoryId: String?, payeeId: String?, type: String?, from: Date?, to: Date?, limit: Int?) -> [MCPTransaction]
+    // swiftlint:disable:next discouraged_optional_boolean
+    func transactions(accountId: String?, categoryId: String?, payeeId: String?, type: String?, from: Date?, to: Date?, reconciled: Bool?, limit: Int?) -> [MCPTransaction]
     func spendingByCategory(from: Date?, to: Date?) -> [(category: String, total: Double)]
-    @discardableResult func createTransaction(value: Double, currencyId: String, type: String, sourceAccountId: String, destinationAccountId: String?, payeeId: String?, categoryId: String?, notes: String?, dateCreated: Date?) throws -> MCPTransaction
-    @discardableResult func updateTransaction(id: String, value: Double?, currencyId: String?, type: String?, sourceAccountId: String?, destinationAccountId: String?, payeeId: String?, categoryId: String?, notes: String?) throws -> MCPTransaction
+    @discardableResult func createTransaction(value: Double, currencyId: String, type: String, sourceAccountId: String, destinationAccountId: String?, payeeId: String?, categoryId: String?, notes: String?, dateCreated: Date?, reconciled: Bool) throws -> MCPTransaction
+    // swiftlint:disable:next discouraged_optional_boolean
+    @discardableResult func updateTransaction(id: String, value: Double?, currencyId: String?, type: String?, sourceAccountId: String?, destinationAccountId: String?, payeeId: String?, categoryId: String?, notes: String?, reconciled: Bool?) throws -> MCPTransaction
     func deleteTransaction(id: String) throws
+    @discardableResult func setReconciled(ids: [String], reconciled: Bool) throws -> [MCPTransaction]
 
     // Budgets
     func budgets() -> [MCPBudget]
@@ -208,7 +211,9 @@ final class JSONDataProvider: DataProvider, @unchecked Sendable {
 
         func cache(_ key: String, into dict: inout [String: [String: Any]]) {
             for obj in (json[key] as? [[String: Any]]) ?? [] {
-                if let id = obj["id"] as? String { dict[id] = obj }
+                if let id = obj["id"] as? String {
+                    dict[id] = obj
+                }
             }
         }
         cache("accounts", into: &nativeAccounts)
@@ -387,7 +392,8 @@ final class JSONDataProvider: DataProvider, @unchecked Sendable {
                 payeeTitle: payeeTitle(payeeId),
                 categoryId: categoryId,
                 categoryTitle: catTitle(categoryId),
-                notes: (obj["notes"] as? String) ?? ""
+                notes: (obj["notes"] as? String) ?? "",
+                isReconciled: (obj["reconciled"] as? Bool) ?? false
             )
         }
     }
@@ -442,7 +448,9 @@ final class JSONDataProvider: DataProvider, @unchecked Sendable {
 
     private func buildNativeAccount(_ a: MCPAccount) -> [String: Any] {
         var obj = nativeAccounts[a.id] ?? [:]
-        if obj["created"] == nil { obj["created"] = fmtDate(Date()) }
+        if obj["created"] == nil {
+            obj["created"] = fmtDate(Date())
+        }
         obj["id"] = a.id
         obj["title"] = a.title
         obj["type"] = acctTypeInt(a.type)
@@ -456,7 +464,9 @@ final class JSONDataProvider: DataProvider, @unchecked Sendable {
 
     private func buildNativeTransaction(_ t: MCPTransaction) -> [String: Any] {
         var obj = nativeTransactions[t.id] ?? [:]
-        if obj["created"] == nil { obj["created"] = fmtDate(t.dateCreated) }
+        if obj["created"] == nil {
+            obj["created"] = fmtDate(t.dateCreated)
+        }
         obj["id"] = t.id
         obj["value"] = fmtNum(t.value)
         obj["currency"] = t.currencyId
@@ -467,35 +477,66 @@ final class JSONDataProvider: DataProvider, @unchecked Sendable {
             obj["exvalue"] = fmtNum(t.exchangeValue)
             obj["excurrency"] = t.exchangeCurrencyId
         }
-        if let dest = toNone(t.destinationAccountId) { obj["destination"] = dest } else { obj.removeValue(forKey: "destination") }
-        if let p = toNone(t.payeeId) { obj["payee"] = p } else { obj.removeValue(forKey: "payee") }
-        if let c = toNone(t.categoryId) { obj["category"] = c } else { obj.removeValue(forKey: "category") }
+        if let dest = toNone(t.destinationAccountId) {
+            obj["destination"] = dest
+        } else {
+            obj.removeValue(forKey: "destination")
+        }
+        if let p = toNone(t.payeeId) {
+            obj["payee"] = p
+        } else {
+            obj.removeValue(forKey: "payee")
+        }
+        if let c = toNone(t.categoryId) {
+            obj["category"] = c
+        } else {
+            obj.removeValue(forKey: "category")
+        }
+        if t.isReconciled {
+            obj["reconciled"] = true
+        } else {
+            obj.removeValue(forKey: "reconciled")
+        }
         return obj
     }
 
     private func buildNativeBudget(_ b: MCPBudget) -> [String: Any] {
         var obj = nativeBudgets[b.id] ?? [:]
-        if obj["created"] == nil { obj["created"] = fmtDate(Date()) }
+        if obj["created"] == nil {
+            obj["created"] = fmtDate(Date())
+        }
         obj["id"] = b.id
         obj["type"] = txTypeInt(b.type)
         obj["target"] = fmtNum(b.target)
-        if let c = toNone(b.categoryId) { obj["category"] = c } else { obj.removeValue(forKey: "category") }
+        if let c = toNone(b.categoryId) {
+            obj["category"] = c
+        } else {
+            obj.removeValue(forKey: "category")
+        }
         return obj
     }
 
     private func buildNativeCategory(_ c: MCPCategory) -> [String: Any] {
         var obj = nativeCategories[c.id] ?? [:]
-        if obj["created"] == nil { obj["created"] = fmtDate(Date()) }
+        if obj["created"] == nil {
+            obj["created"] = fmtDate(Date())
+        }
         obj["id"] = c.id
         obj["title"] = c.title
         obj["image"] = c.imageName
-        if let p = toNone(c.parentId) { obj["parent"] = p } else { obj.removeValue(forKey: "parent") }
+        if let p = toNone(c.parentId) {
+            obj["parent"] = p
+        } else {
+            obj.removeValue(forKey: "parent")
+        }
         return obj
     }
 
     private func buildNativeCurrency(_ c: MCPCurrency) -> [String: Any] {
         var obj = nativeCurrencies[c.id] ?? [:]
-        if obj["created"] == nil { obj["created"] = fmtDate(Date()) }
+        if obj["created"] == nil {
+            obj["created"] = fmtDate(Date())
+        }
         obj["id"] = c.id
         obj["default"] = c.isDefault
         obj["rate"] = fmtNum(c.exchangeRate)
@@ -504,7 +545,9 @@ final class JSONDataProvider: DataProvider, @unchecked Sendable {
 
     private func buildNativePayee(_ p: MCPPayee) -> [String: Any] {
         var obj = nativePayees[p.id] ?? [:]
-        if obj["created"] == nil { obj["created"] = fmtDate(Date()) }
+        if obj["created"] == nil {
+            obj["created"] = fmtDate(Date())
+        }
         obj["id"] = p.id
         obj["title"] = p.title
         return obj
@@ -512,7 +555,9 @@ final class JSONDataProvider: DataProvider, @unchecked Sendable {
 
     private func buildNativeScheduled(_ s: MCPScheduledTransaction) -> [String: Any] {
         var obj = nativeScheduled[s.id] ?? [:]
-        if obj["created"] == nil { obj["created"] = fmtDate(Date()) }
+        if obj["created"] == nil {
+            obj["created"] = fmtDate(Date())
+        }
         obj["id"] = s.id
         obj["value"] = fmtNum(s.value)
         obj["currency"] = s.currencyId
@@ -520,8 +565,16 @@ final class JSONDataProvider: DataProvider, @unchecked Sendable {
         obj["scheduled"] = fmtDate(s.dateScheduled)
         obj["interval"] = intervalInt(s.interval)
         obj["source"] = s.accountId
-        if s.isAutomatic { obj["automatic"] = true } else { obj.removeValue(forKey: "automatic") }
-        if let dest = toNone(s.destinationAccountId) { obj["destination"] = dest } else { obj.removeValue(forKey: "destination") }
+        if s.isAutomatic {
+            obj["automatic"] = true
+        } else {
+            obj.removeValue(forKey: "automatic")
+        }
+        if let dest = toNone(s.destinationAccountId) {
+            obj["destination"] = dest
+        } else {
+            obj.removeValue(forKey: "destination")
+        }
         return obj
     }
 
@@ -575,8 +628,12 @@ final class JSONDataProvider: DataProvider, @unchecked Sendable {
             case "income": return t.sourceAccountId == accountId ? sum + t.value : sum
             case "expense": return t.sourceAccountId == accountId ? sum - t.value : sum
             case "transfer":
-                if t.sourceAccountId == accountId { return sum - t.value }
-                if t.destinationAccountId == accountId { return sum + t.value }
+                if t.sourceAccountId == accountId {
+                    return sum - t.value
+                }
+                if t.destinationAccountId == accountId {
+                    return sum + t.value
+                }
                 return sum
             default: return sum
             }
@@ -670,16 +727,34 @@ final class JSONDataProvider: DataProvider, @unchecked Sendable {
 
     // MARK: - Transaction reads
 
-    func transactions(accountId: String?, categoryId: String?, payeeId: String?, type: String?, from: Date?, to: Date?, limit: Int?) -> [MCPTransaction] {
+    // swiftlint:disable:next discouraged_optional_boolean
+    func transactions(accountId: String?, categoryId: String?, payeeId: String?, type: String?, from: Date?, to: Date?, reconciled: Bool?, limit: Int?) -> [MCPTransaction] {
         var result = snapshot.transactions
-        if let accountId { result = result.filter { $0.sourceAccountId == accountId || $0.destinationAccountId == accountId } }
-        if let categoryId { result = result.filter { $0.categoryId == categoryId } }
-        if let payeeId { result = result.filter { $0.payeeId == payeeId } }
-        if let type { result = result.filter { $0.type == type } }
-        if let from { result = result.filter { $0.dateCreated >= from } }
-        if let to { result = result.filter { $0.dateCreated <= to } }
+        if let accountId {
+            result = result.filter { $0.sourceAccountId == accountId || $0.destinationAccountId == accountId }
+        }
+        if let categoryId {
+            result = result.filter { $0.categoryId == categoryId }
+        }
+        if let payeeId {
+            result = result.filter { $0.payeeId == payeeId }
+        }
+        if let type {
+            result = result.filter { $0.type == type }
+        }
+        if let from {
+            result = result.filter { $0.dateCreated >= from }
+        }
+        if let to {
+            result = result.filter { $0.dateCreated <= to }
+        }
+        if let reconciled {
+            result = result.filter { $0.isReconciled == reconciled }
+        }
         result.sort { $0.dateCreated > $1.dateCreated }
-        if let limit { result = Array(result.prefix(limit)) }
+        if let limit {
+            result = Array(result.prefix(limit))
+        }
         return result
     }
 
@@ -691,6 +766,7 @@ final class JSONDataProvider: DataProvider, @unchecked Sendable {
             type: "expense",
             from: from,
             to: to,
+            reconciled: nil,
             limit: nil
         )
         var totals: [String: Double] = [:]
@@ -702,7 +778,7 @@ final class JSONDataProvider: DataProvider, @unchecked Sendable {
 
     // MARK: - Transaction writes
 
-    func createTransaction(value: Double, currencyId: String, type: String, sourceAccountId: String, destinationAccountId: String?, payeeId: String?, categoryId: String?, notes: String?, dateCreated: Date?) throws -> MCPTransaction {
+    func createTransaction(value: Double, currencyId: String, type: String, sourceAccountId: String, destinationAccountId: String?, payeeId: String?, categoryId: String?, notes: String?, dateCreated: Date?, reconciled: Bool) throws -> MCPTransaction {
         let destId = destinationAccountId ?? ""
         let pId = payeeId ?? ""
         let cId = categoryId ?? ""
@@ -722,14 +798,16 @@ final class JSONDataProvider: DataProvider, @unchecked Sendable {
             payeeTitle: resolvePayeeTitle(payeeId: pId),
             categoryId: cId,
             categoryTitle: resolveCategoryTitle(categoryId: cId),
-            notes: notes ?? ""
+            notes: notes ?? "",
+            isReconciled: reconciled
         )
         snapshot.transactions.append(t)
         try save()
         return t
     }
 
-    func updateTransaction(id: String, value: Double?, currencyId: String?, type: String?, sourceAccountId: String?, destinationAccountId: String?, payeeId: String?, categoryId: String?, notes: String?) throws -> MCPTransaction {
+    // swiftlint:disable:next discouraged_optional_boolean
+    func updateTransaction(id: String, value: Double?, currencyId: String?, type: String?, sourceAccountId: String?, destinationAccountId: String?, payeeId: String?, categoryId: String?, notes: String?, reconciled: Bool?) throws -> MCPTransaction {
         guard let i = snapshot.transactions.firstIndex(where: { $0.id == id }) else {
             throw notFound("Transaction", id: id)
         }
@@ -755,7 +833,8 @@ final class JSONDataProvider: DataProvider, @unchecked Sendable {
             payeeTitle: resolvePayeeTitle(payeeId: pId),
             categoryId: cId,
             categoryTitle: resolveCategoryTitle(categoryId: cId),
-            notes: notes ?? old.notes
+            notes: notes ?? old.notes,
+            isReconciled: reconciled ?? old.isReconciled
         )
         snapshot.transactions[i] = updated
         try save()
@@ -770,6 +849,40 @@ final class JSONDataProvider: DataProvider, @unchecked Sendable {
         snapshot.transactions.removeAll { $0.id == id }
         nativeTransactions.removeValue(forKey: id)
         try save()
+    }
+
+    func setReconciled(ids: [String], reconciled: Bool) throws -> [MCPTransaction] {
+        var updated: [MCPTransaction] = []
+        for id in ids {
+            guard let i = snapshot.transactions.firstIndex(where: { $0.id == id }) else {
+                throw notFound("Transaction", id: id)
+            }
+
+            let old = snapshot.transactions[i]
+            let t = MCPTransaction(
+                id: old.id,
+                dateCreated: old.dateCreated,
+                value: old.value,
+                currencyId: old.currencyId,
+                exchangeValue: old.exchangeValue,
+                exchangeCurrencyId: old.exchangeCurrencyId,
+                type: old.type,
+                sourceAccountId: old.sourceAccountId,
+                sourceAccountTitle: old.sourceAccountTitle,
+                destinationAccountId: old.destinationAccountId,
+                destinationAccountTitle: old.destinationAccountTitle,
+                payeeId: old.payeeId,
+                payeeTitle: old.payeeTitle,
+                categoryId: old.categoryId,
+                categoryTitle: old.categoryTitle,
+                notes: old.notes,
+                isReconciled: reconciled
+            )
+            snapshot.transactions[i] = t
+            updated.append(t)
+        }
+        try save()
+        return updated
     }
 
     // MARK: - Budget reads
@@ -1023,8 +1136,12 @@ final class JSONDataProvider: DataProvider, @unchecked Sendable {
 
     func scheduledTransactions(from: Date?, to: Date?) -> [MCPScheduledTransaction] {
         var result = snapshot.scheduledTransactions
-        if let from { result = result.filter { $0.dateScheduled >= from } }
-        if let to { result = result.filter { $0.dateScheduled <= to } }
+        if let from {
+            result = result.filter { $0.dateScheduled >= from }
+        }
+        if let to {
+            result = result.filter { $0.dateScheduled <= to }
+        }
         return result.sorted { $0.dateScheduled < $1.dateScheduled }
     }
 
@@ -1051,8 +1168,12 @@ final class JSONDataProvider: DataProvider, @unchecked Sendable {
         )
         // Pre-populate native cache so payee/category IDs are preserved on save
         var obj: [String: Any] = ["id": s.id, "created": fmtDate(Date())]
-        if !pId.isEmpty { obj["payee"] = pId }
-        if !cId.isEmpty { obj["category"] = cId }
+        if !pId.isEmpty {
+            obj["payee"] = pId
+        }
+        if !cId.isEmpty {
+            obj["category"] = cId
+        }
         nativeScheduled[s.id] = obj
         snapshot.scheduledTransactions.append(s)
         try save()
