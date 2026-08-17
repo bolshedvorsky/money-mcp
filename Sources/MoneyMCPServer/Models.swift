@@ -33,6 +33,7 @@ struct MCPTransaction: Codable {
     let categoryId: String
     let categoryTitle: String
     let notes: String
+    let isReconciled: Bool
 }
 
 struct MCPBudget: Codable {

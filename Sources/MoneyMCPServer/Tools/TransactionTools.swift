@@ -4,7 +4,8 @@ import MCP
 enum TransactionTools {
     static let names: Set<String> = [
         "list_transactions", "get_spending_by_category",
-        "create_transaction", "update_transaction", "delete_transaction"
+        "create_transaction", "update_transaction", "delete_transaction",
+        "set_transactions_reconciled"
     ]
 
     static var definitions: [Tool] {
@@ -21,6 +22,7 @@ enum TransactionTools {
                         "type": ["type": "string", "description": "Transaction type: income, expense, or transfer."],
                         "from_date": ["type": "string", "description": "Start date in ISO 8601 format (e.g. 2025-01-01)."],
                         "to_date": ["type": "string", "description": "End date in ISO 8601 format."],
+                        "reconciled": ["type": "boolean", "description": "Filter by reconciliation status: true for reconciled transactions only, false for unreconciled only."],
                         "limit": ["type": "integer", "description": "Maximum results to return. Defaults to 50."]
                     ]
                 ]
@@ -50,7 +52,8 @@ enum TransactionTools {
                         "payee_id": ["type": "string", "description": "Payee ID."],
                         "category_id": ["type": "string", "description": "Category ID."],
                         "notes": ["type": "string", "description": "Optional notes."],
-                        "date": ["type": "string", "description": "Transaction date in ISO 8601 format. Defaults to now."]
+                        "date": ["type": "string", "description": "Transaction date in ISO 8601 format. Defaults to now."],
+                        "reconciled": ["type": "boolean", "description": "Whether the transaction is reconciled against a bank statement. Defaults to false."]
                     ],
                     "required": ["value", "currency_id", "type", "source_account_id"]
                 ]
@@ -69,7 +72,8 @@ enum TransactionTools {
                         "destination_account_id": ["type": "string", "description": "New destination account ID."],
                         "payee_id": ["type": "string", "description": "New payee ID."],
                         "category_id": ["type": "string", "description": "New category ID."],
-                        "notes": ["type": "string", "description": "New notes."]
+                        "notes": ["type": "string", "description": "New notes."],
+                        "reconciled": ["type": "boolean", "description": "Whether the transaction is reconciled against a bank statement."]
                     ],
                     "required": ["id"]
                 ]
@@ -83,6 +87,18 @@ enum TransactionTools {
                         "id": ["type": "string", "description": "Transaction ID to delete."]
                     ],
                     "required": ["id"]
+                ]
+            ),
+            Tool(
+                name: "set_transactions_reconciled",
+                description: "Mark one or more transactions as reconciled or unreconciled against a bank statement, e.g. when matching transactions during a reconciliation pass.",
+                inputSchema: [
+                    "type": "object",
+                    "properties": [
+                        "ids": ["type": "array", "items": ["type": "string"], "description": "Transaction IDs to update."],
+                        "reconciled": ["type": "boolean", "description": "Reconciliation status to apply to all listed transactions."]
+                    ],
+                    "required": ["ids", "reconciled"]
                 ]
             )
         ]
@@ -98,6 +114,7 @@ enum TransactionTools {
                 type: arguments?["type"]?.stringValue,
                 from: arguments?["from_date"]?.stringValue.flatMap(parseDate),
                 to: arguments?["to_date"]?.stringValue.flatMap(parseDate),
+                reconciled: arguments?["reconciled"]?.boolValue,
                 limit: arguments?["limit"]?.intValue ?? 50
             )
             return [.text(text: prettyJSON(results), annotations: nil, _meta: nil)]
@@ -128,7 +145,8 @@ enum TransactionTools {
                 payeeId: arguments?["payee_id"]?.stringValue,
                 categoryId: arguments?["category_id"]?.stringValue,
                 notes: arguments?["notes"]?.stringValue,
-                dateCreated: arguments?["date"]?.stringValue.flatMap(parseDate)
+                dateCreated: arguments?["date"]?.stringValue.flatMap(parseDate),
+                reconciled: arguments?["reconciled"]?.boolValue ?? false
             )
             return [.text(text: prettyJSON(t), annotations: nil, _meta: nil)]
 
@@ -146,7 +164,8 @@ enum TransactionTools {
                 destinationAccountId: arguments?["destination_account_id"]?.stringValue,
                 payeeId: arguments?["payee_id"]?.stringValue,
                 categoryId: arguments?["category_id"]?.stringValue,
-                notes: arguments?["notes"]?.stringValue
+                notes: arguments?["notes"]?.stringValue,
+                reconciled: arguments?["reconciled"]?.boolValue
             )
             return [.text(text: prettyJSON(t), annotations: nil, _meta: nil)]
 
@@ -157,6 +176,15 @@ enum TransactionTools {
 
             try provider.deleteTransaction(id: id)
             return [.text(text: "Transaction deleted: \(id)", annotations: nil, _meta: nil)]
+
+        case "set_transactions_reconciled":
+            guard
+                let ids = arguments?["ids"]?.arrayValue?.compactMap(\.stringValue), !ids.isEmpty,
+                let reconciled = arguments?["reconciled"]?.boolValue
+            else { throw MCPError.invalidParams("Missing required parameters: ids, reconciled") }
+
+            let updated = try provider.setReconciled(ids: ids, reconciled: reconciled)
+            return [.text(text: prettyJSON(updated), annotations: nil, _meta: nil)]
 
         default:
             throw MCPError.methodNotFound(name)
